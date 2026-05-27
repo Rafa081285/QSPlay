@@ -33,7 +33,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-          cache: maven
           server-id: github
           server-username: GITHUB_ACTOR
           server-password: PACKAGES_TOKEN
