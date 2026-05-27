@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       playwrightVersion:
-        description: "Playwright version to mirror"
+        description: Playwright version to mirror
         required: false
         default: "1.53.0"
       targetRepository:
-        description: "Target owner/repo for GitHub Packages (for example Rafa081285/kafdrop)"
+        description: Target owner/repo for GitHub Packages
         required: true
-        default: "Rafa081285/kafdrop"
+        default: "Rafa081285/QSPlay"
 
 permissions:
   contents: read
@@ -28,60 +28,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Java and Maven credentials for GitHub Packages
+      - name: Set up Java for Maven
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
-          cache: maven
           server-id: github
           server-username: GITHUB_ACTOR
           server-password: PACKAGES_TOKEN
 
-      - name: Download artifacts from Maven Central
+      - name: Resolve Playwright dependency graph
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p mirror-artifacts
+          python3 .github/scripts/mirror_playwright.py resolve \
+            --version "$PLAYWRIGHT_VERSION" \
+            --workdir "$GITHUB_WORKSPACE/.playwright-mirror" \
+            --repo-local "$GITHUB_WORKSPACE/.playwright-mirror/m2"
 
-          download_artifact() {
-            local group_path="$1"
-            local artifact="$2"
-            local version="$3"
-            local base="https://repo1.maven.org/maven2/${group_path}/${artifact}/${version}/${artifact}-${version}"
-
-            curl -fsSL "${base}.pom" -o "mirror-artifacts/${artifact}-${version}.pom"
-            curl -fsSL "${base}.jar" -o "mirror-artifacts/${artifact}-${version}.jar"
-          }
-
-          download_artifact "com/microsoft/playwright" "playwright" "$PLAYWRIGHT_VERSION"
-          download_artifact "com/microsoft/playwright" "driver" "$PLAYWRIGHT_VERSION"
-          download_artifact "com/microsoft/playwright" "driver-bundle" "$PLAYWRIGHT_VERSION"
-
-      - name: Publish to GitHub Packages (Maven)
+      - name: Publish to GitHub Packages
         shell: bash
-        env:
-          GITHUB_TOKEN: ${{ env.PACKAGES_TOKEN }}
         run: |
           set -euo pipefail
-          GH_MAVEN_URL="https://maven.pkg.github.com/${TARGET_REPOSITORY}"
-
-          deploy_artifact() {
-            local artifact="$1"
-            local version="$2"
-
-            mvn --batch-mode deploy:deploy-file \
-              -DrepositoryId=github \
-              -Durl="$GH_MAVEN_URL" \
-              -DgroupId=com.microsoft.playwright \
-              -DartifactId="$artifact" \
-              -Dversion="$version" \
-              -Dpackaging=jar \
-              -Dfile="mirror-artifacts/${artifact}-${version}.jar" \
-              -DpomFile="mirror-artifacts/${artifact}-${version}.pom" \
-              -DgeneratePom=false
-          }
-
-          deploy_artifact "playwright" "$PLAYWRIGHT_VERSION"
-          deploy_artifact "driver" "$PLAYWRIGHT_VERSION"
-          deploy_artifact "driver-bundle" "$PLAYWRIGHT_VERSION"
+          python3 .github/scripts/mirror_playwright.py publish \
+            --coords-file "$GITHUB_WORKSPACE/.playwright-mirror/coords.txt" \
+            --repo-local "$GITHUB_WORKSPACE/.playwright-mirror/m2" \
+            --target-url "https://maven.pkg.github.com/${TARGET_REPOSITORY}"

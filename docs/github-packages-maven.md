@@ -25,6 +25,8 @@ It publishes these coordinates to GitHub Packages:
 - `com.microsoft.playwright:driver:<version>`
 - `com.microsoft.playwright:driver-bundle:<version>`
 
+At the moment the workflow also mirrors the transitive Playwright dependency closure plus the parent and imported POMs needed by those artifacts.
+
 ## 2) Maven repository configuration (consumer project)
 
 Add this repository to `pom.xml`:
@@ -75,3 +77,29 @@ In GitHub Actions, configure Maven auth with `actions/setup-java`:
 ```
 
 Then run Maven normally.
+
+## 5) Codespaces smoke test
+
+This repository includes a ready-to-run Codespaces sample under `codespaces/playwright-consumer`.
+
+Required Codespaces secrets:
+
+- `GH_PACKAGES_USER`
+- `GH_PACKAGES_TOKEN`
+
+When the codespace starts, `.devcontainer/post-create.sh` generates `~/.m2/settings.xml` and installs the mirrored Playwright artifacts into the local Maven repository directly from GitHub Packages.
+
+To verify the mirrored jars without touching Maven Central for Playwright itself:
+
+```bash
+cd codespaces/playwright-consumer
+./run-check.sh
+```
+
+If you want a strict Maven-only test, use:
+
+```bash
+mvn -s "$HOME/.m2/settings.xml" -f codespaces/playwright-consumer/pom.xml -q dependency:tree
+```
+
+Note: Azure Artifacts upstream caching is broader than this GitHub Packages mirror. A strict Maven-only run may still require Maven plugin artifacts that are not part of the Playwright dependency graph.
