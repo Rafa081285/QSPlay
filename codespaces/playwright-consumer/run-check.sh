@@ -5,10 +5,6 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 output_dir="$repo_root/target/classes"
 source_file="$repo_root/src/main/java/example/CheckPlaywright.java"
 
-if [[ ! -f "$HOME/.m2/repository/com/microsoft/playwright/playwright/1.53.0/playwright-1.53.0.jar" ]]; then
-  "$repo_root/install-playwright-from-gpr.sh"
-fi
-
 jars=(
   "$HOME/.m2/repository/com/microsoft/playwright/playwright/1.53.0/playwright-1.53.0.jar"
   "$HOME/.m2/repository/com/microsoft/playwright/driver/1.53.0/driver-1.53.0.jar"
@@ -17,6 +13,18 @@ jars=(
   "$HOME/.m2/repository/com/google/errorprone/error_prone_annotations/2.36.0/error_prone_annotations-2.36.0.jar"
   "$HOME/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar"
 )
+
+needs_install=0
+for jar in "${jars[@]}"; do
+  if [[ ! -f "$jar" ]]; then
+    needs_install=1
+    break
+  fi
+done
+
+if [[ "$needs_install" -eq 1 ]]; then
+  "$repo_root/install-playwright-from-gpr.sh"
+fi
 
 for jar in "${jars[@]}"; do
   if [[ ! -f "$jar" ]]; then
