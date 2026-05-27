@@ -5,6 +5,9 @@
   "remoteEnv": {
     "PLAYWRIGHT_MIRROR_REPO": "Rafa081285/QSPlay"
   },
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [
