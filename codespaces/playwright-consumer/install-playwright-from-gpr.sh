@@ -43,6 +43,11 @@ download_artifact() {
 }
 
 while IFS=: read -r group_id artifact_id version packaging; do
+  group_id="${group_id//$'\r'/}"
+  artifact_id="${artifact_id//$'\r'/}"
+  version="${version//$'\r'/}"
+  packaging="${packaging//$'\r'/}"
+
   [[ -n "$group_id" ]] || continue
 
   download_artifact "$group_id" "$artifact_id" "$version" "pom"
