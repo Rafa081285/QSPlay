@@ -10,7 +10,7 @@ on:
       targetRepository:
         description: "Target owner/repo for GitHub Packages (for example Rafa081285/kafdrop)"
         required: true
-        default: "Rafa081285/kafdrop"
+        default: "Rafa081285/QSPlay"
 
 permissions:
   contents: read
