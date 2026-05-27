@@ -4,8 +4,10 @@ This folder verifies that the mirrored Playwright artifacts can be consumed from
 
 ## Required Codespaces secrets
 
-- `GH_PACKAGES_USER`: GitHub username that can read packages from `Rafa081285/QSPlay`
-- `GH_PACKAGES_TOKEN`: PAT with `read:packages`
+- `GH_PACKAGES_USER`: optional if the Codespace is already authenticated with `gh`
+- `GH_PACKAGES_TOKEN`: optional if the Codespace is already authenticated with `gh`
+
+If those secrets are not set, the post-create step falls back to `gh auth token` and your signed-in GitHub identity.
 
 The post-create step generates `~/.m2/settings.xml` and downloads the mirrored artifacts into the local Maven repository.
 
