@@ -59,6 +59,25 @@ def parent_coord_from_pom(pom_file: pathlib.Path) -> tuple[str, str, str] | None
     return (group_node.text.strip(), artifact_node.text.strip(), version_node.text.strip())
 
 
+def deploy_file(command: list[str], group_id: str, artifact_id: str, version: str) -> None:
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode == 0:
+        print(f"Published {group_id}:{artifact_id}:{version}", file=sys.stderr)
+        return
+
+    output = f"{result.stdout}\n{result.stderr}"
+    if "status code: 409" in output or "Conflict (409)" in output:
+        print(f"Skipping existing artifact {group_id}:{artifact_id}:{version}", file=sys.stderr)
+        return
+
+    raise subprocess.CalledProcessError(
+        result.returncode,
+        command,
+        output=result.stdout,
+        stderr=result.stderr,
+    )
+
+
 def resolve_command(args: argparse.Namespace) -> int:
     workdir = pathlib.Path(args.workdir)
     repo_local = pathlib.Path(args.repo_local)
@@ -151,7 +170,7 @@ def publish_command(args: argparse.Namespace) -> int:
         pom_file = artifact_dir / f"{artifact_id}-{version}.pom"
 
         if jar_file.exists():
-            subprocess.run(
+            deploy_file(
                 [
                     "mvn",
                     "--batch-mode",
@@ -166,12 +185,14 @@ def publish_command(args: argparse.Namespace) -> int:
                     f"-DpomFile={pom_file}",
                     "-DgeneratePom=false",
                 ],
-                check=True,
+                group_id,
+                artifact_id,
+                version,
             )
             continue
 
         if pom_file.exists():
-            subprocess.run(
+            deploy_file(
                 [
                     "mvn",
                     "--batch-mode",
@@ -185,7 +206,9 @@ def publish_command(args: argparse.Namespace) -> int:
                     f"-Dfile={pom_file}",
                     "-DgeneratePom=false",
                 ],
-                check=True,
+                group_id,
+                artifact_id,
+                version,
             )
 
     return 0
