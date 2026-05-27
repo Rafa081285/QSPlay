@@ -1,0 +1,19 @@
+{
+  "name": "QSPlay GitHub Packages Mirror Test",
+  "image": "mcr.microsoft.com/devcontainers/java:1-21-bullseye",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteEnv": {
+    "PLAYWRIGHT_MIRROR_REPO": "Rafa081285/QSPlay"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "github.vscode-github-actions"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic"
+      }
+    }
+  }
+}
