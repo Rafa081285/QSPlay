@@ -42,7 +42,7 @@ download_artifact() {
     --output "$target_file"
 }
 
-while IFS=: read -r group_id artifact_id version packaging; do
+while IFS=: read -r group_id artifact_id version packaging || [[ -n "$group_id$artifact_id$version$packaging" ]]; do
   group_id="${group_id//$'\r'/}"
   artifact_id="${artifact_id//$'\r'/}"
   version="${version//$'\r'/}"
